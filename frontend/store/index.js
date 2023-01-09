@@ -4,6 +4,7 @@ import {
   appreciatePeerBySender,
   getBothTokenBalancesForAddress,
   getEthersProvider,
+  getEventLogs,
   getLeaderBoard,
   getRegistrationDoc,
   setRegistrationDoc,
@@ -19,6 +20,7 @@ export const state = () => ({
   profileGAT: 0,
   profileGXP: 0,
   leaderBoard: [],
+  eventLogData: [],
 })
 
 export const mutations = {
@@ -38,6 +40,9 @@ export const mutations = {
   },
   setLeaderBoardTable(state, payload) {
     state.leaderBoard = payload.leaderBoard
+  },
+  setEventLogTable(state, payload) {
+    state.eventLogData = payload.eventLogData
   },
   setRegistrationPending(state, payload) {
     state.isRegistrationPending = payload.isRegistrationPending
@@ -92,7 +97,8 @@ export const actions = {
       if (isWhitelisted) {
         dispatch('fetchAndStoreProfile')
         dispatch('getGiniBalancesForConnectedWallet')
-        dispatch('getLeaderBoardForDisplay')
+        await dispatch('getLeaderBoardForDisplay')
+        dispatch('getEventLogTableForDisplay')
       }
     } catch (error) {
       console.error(error)
@@ -218,6 +224,34 @@ export const actions = {
     } catch (error) {
       console.error(error)
       return false
+    }
+  },
+  async getEventLogTableForDisplay({ commit, state }) {
+    try {
+      const { success, tableData } = await getEventLogs()
+      if (!success || !tableData || tableData.length <= 0) {
+        throw new Error('Something went wrong while trying to get event data')
+      } else {
+        const transformedTable = []
+        for (let i = 0; i < tableData.length; i++) {
+          const table = tableData[i]
+          const z = state.leaderBoard.findIndex(
+            (v) => v.address == table.appreciator
+          )
+          const y = state.leaderBoard.findIndex(
+            (v) => v.address == table.appreciationReceiver
+          )
+          transformedTable.push({
+            appreciator: state.leaderBoard[z].name,
+            appreciationReceiver: state.leaderBoard[y].name,
+            amount: table.amount,
+            reason: table.reason,
+          })
+        }
+        commit('setEventLogTable', { eventLogData: transformedTable })
+      }
+    } catch (error) {
+      console.error(error)
     }
   },
 }

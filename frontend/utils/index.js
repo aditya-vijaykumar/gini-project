@@ -256,3 +256,55 @@ export const appreciatePeerBySender = async (
     return false
   }
 }
+
+export const getEventLogs = async () => {
+  try {
+    const eventData = []
+    console.log(`Getting the GiniToken events...`)
+
+    const giniContractAddress = contract.address
+
+    const eventSignature = 'NewAppreciation(address,address,uint256,string)'
+    const eventTopic = ethers.utils.id(eventSignature) // Get the data hex string
+
+    const provider = new ethers.providers.InfuraProvider(
+      { chainId: 5, name: 'goerli' },
+      'aba673f5f7e84583b4179c3ca6a08e26'
+    )
+
+    const latestBlock = provider.blockNumber
+
+    const rawLogs = await provider.getLogs({
+      address: giniContractAddress,
+      topics: [eventTopic],
+      fromBlock: 8163832,
+      toBlock: latestBlock,
+    })
+
+    const abi = contract.abi
+    const intrfc = new ethers.utils.Interface(abi)
+
+    for (let i = 0; i < rawLogs.length; i++) {
+      const log = rawLogs[i]
+      let parsedLog = intrfc.parseLog(log)
+      const dataObj = {
+        appreciator: parsedLog.args[0],
+        appreciationReceiver: parsedLog.args[1],
+        amount: parsedLog.args[2].div(ethers.constants.WeiPerEther).toNumber(),
+        reason: parsedLog.args[3],
+      }
+      console.debug(dataObj)
+      eventData.push(dataObj)
+    }
+    return {
+      success: true,
+      tableData: eventData,
+    }
+  } catch (error) {
+    console.error(error)
+    return {
+      success: false,
+      tableData: null,
+    }
+  }
+}

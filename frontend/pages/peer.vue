@@ -88,6 +88,14 @@
                                     </v-btn>
                                   </v-form>
                                 </template>
+
+                                <div class="mt-10">
+                                  <h2 class="mb-10">Recent Appreciations</h2>
+                                  <template dark>
+                                    <v-data-table :headers="headersForEvents" :items="eventLogData" :items-per-page="5"
+                                      class="elevation-1"></v-data-table>
+                                  </template>
+                                </div>
                               </v-col>
                             </v-row>
 
@@ -124,7 +132,7 @@ import { mapState } from 'vuex'
 export default {
   name: 'PeerPage',
    computed: {
-    ...mapState(['address', 'isWhitelisted', 'profile', 'profileGAT', 'profileGXP', 'leaderBoard']),
+    ...mapState(['address', 'isWhitelisted', 'profile', 'profileGAT', 'profileGXP', 'leaderBoard', 'eventLogData']),
     onlyNames() {
       const modArray =  this.leaderBoard.filter( v=> v.address != this.address)
       return modArray.map(z => z.name)
@@ -168,6 +176,18 @@ export default {
           { text: 'Address', value: 'truncAddress', sortable: false,align: 'center' },
           { text: 'GAT tokens', value: 'gat', align: 'center' },
           { text: 'GXP tokens', value: 'gxp', align: 'center' }
+        ],
+        headersForEvents: [
+          {
+            text: 'From',
+            sortable: false,
+            value: 'appreciator',
+            align: 'center',  
+            width: '24%'
+          },
+          { text: 'To', value: 'appreciationReceiver', sortable: false,align: 'center',  width: '24%' },
+          { text: 'Amount', value: 'amount', align: 'center', width: '12%' },
+          { text: 'Reason', value: 'reason', align: 'center', width: '40%'}
         ],
         message: '',
       messageRules: [
